@@ -20,6 +20,12 @@ const builtInScalarMap = {
   [GraphQLFloat.name]: t.TSNumberKeyword(),
   [GraphQLBoolean.name]: t.TSBooleanKeyword(),
   [GraphQLID.name]: t.TSStringKeyword(),
+  // There is no support for custom scalars in Apollo Client:
+  // - https://github.com/apollographql/apollo-client/issues/585
+  // - https://github.com/apollographql/apollo-client/issues/2626
+  "Instant": t.TSNumberKeyword(),
+  "CarPlatform": t.TSStringKeyword(),
+  "URI": t.TSStringKeyword(),
 }
 
 export function createTypeFromGraphQLTypeFunction(

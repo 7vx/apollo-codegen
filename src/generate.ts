@@ -1,6 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import * as rimraf from 'rimraf';
+// import * as rimraf from 'rimraf';
 
 import { loadSchema, loadSchemaFromConfig, loadAndMergeQueryDocuments } from './loading';
 import { validateQueryDocument } from './validation';
@@ -120,9 +120,9 @@ function writeGeneratedFiles(
 ) {
   // Clear all generated stuff to make sure there isn't anything
   // unnecessary lying around.
-  rimraf.sync(outputDirectory);
+  // rimraf.sync(outputDirectory);
   // Remake the output directory
-  fs.mkdirSync(outputDirectory);
+  // fs.mkdirSync(outputDirectory);
 
   for (const [fileName, generatedFile] of Object.entries(generatedFiles)) {
     fs.writeFileSync(path.join(outputDirectory, fileName), generatedFile.output);

@@ -5,6 +5,7 @@ import {
   GraphQLInputObjectType,
 } from 'graphql';
 import * as path from 'path';
+import { ucFirst } from 'change-case'
 
 import {
   CompilerContext,
@@ -83,8 +84,8 @@ export function generateSource(
 
       const outputFilePath = path.join(
         path.dirname(operation.filePath),
-        '__generated__',
-        `${operation.operationName}.ts`
+        path.basename(operation.filePath, ".graphql") + ".tsx",
+        // `${operation.operationName}${ucFirst(operation.operationType)}.tsx`
       );
 
       generatedFiles[outputFilePath] = new TypescriptGeneratedFile(output);
@@ -100,8 +101,7 @@ export function generateSource(
 
       const outputFilePath = path.join(
         path.dirname(fragment.filePath),
-        '__generated__',
-        `${fragment.fragmentName}.ts`
+        `${fragment.fragmentName}Fragment.ts`
       );
 
       generatedFiles[outputFilePath] = new TypescriptGeneratedFile(output);
@@ -145,10 +145,12 @@ export class TypescriptAPIGenerator extends TypescriptGenerator {
       operationType,
       operationName,
       variables,
-      selectionSet
+      selectionSet,
+      filePath
     } = operation;
 
-    this.scopeStackPush(operationName);
+    this.scopeStackPush("Result");
+    // this.scopeStackPush(operationName);
 
     this.printer.enqueue(stripIndent`
       // ====================================================
@@ -164,15 +166,20 @@ export class TypescriptAPIGenerator extends TypescriptGenerator {
     const properties = this.getPropertiesForVariant(variant);
 
     const exportedTypeAlias = this.exportDeclaration(
-      this.interface(operationName, properties)
+      this.interface("Result", properties)
     );
 
     this.printer.enqueue(exportedTypeAlias);
     this.scopeStackPop();
 
+    const o = ucFirst(operationType)
+
+    this.printer.enqueue(`import ${o} from \"./${path.basename(filePath)}\";`)
+    this.printer.enqueue(`export { ${o} };`)
+
     // Generate the variables interface if the operation has any variables
     if (variables.length > 0) {
-      const interfaceName = operationName + 'Variables';
+      const interfaceName = 'Variables';
       this.scopeStackPush(interfaceName);
       this.printer.enqueue(this.exportDeclaration(
         this.interface(interfaceName, variables.map((variable) => ({
@@ -181,6 +188,130 @@ export class TypescriptAPIGenerator extends TypescriptGenerator {
         })), { keyInheritsNullability: true })
       ));
       this.scopeStackPop();
+    } else {
+      this.printer.enqueue(`interface Variables {}`)
+    }
+
+    // Check:
+    // - https://github.com/Microsoft/TypeScript/issues/3960
+    // - https://github.com/Microsoft/TypeScript/issues/6395
+    // Waiting for TS 2.9:
+    // - https://github.com/Microsoft/TypeScript/pull/22415
+
+    // Tried:
+    // - https://github.com/jamiebuilds/babel-handbook/blob/master/translations/en/plugin-handbook.md#toc-asts
+    // - https://github.com/babel/babel/blob/master/packages/babylon/ast/spec.md
+    // - http://astexplorer.net/
+    // Can't make it work :-(
+
+    this.printer.enqueue(`
+import * as React from 'react'
+
+type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>
+`);
+
+    if (operationType === "query") {
+      this.printer.enqueue(`
+import {
+  Query as __Query,
+  QueryProps,
+  QueryResult as __QueryResult,
+} from "react-apollo";
+
+type Props = Omit<QueryProps<Result, Variables>, "query">
+
+export const Component: React.SFC<Props> = (props) => {
+  return (
+    <__Query<Result, Variables> query={Query} {...props} />
+  )
+};
+
+export type QueryResult = __QueryResult<Result, Variables>
+export type SimpleResult = { data: Result }
+
+export function withQuery<TInputProps = {}>(WrappedComponent: React.ComponentType<TInputProps & QueryResult>): React.SFC<TInputProps> {
+  return (props) => {
+    // data can be {}. See:
+    // - https://github.com/apollographql/react-apollo/issues/1977
+    // - https://github.com/apollographql/react-apollo/issues/1686
+    //
+    // Avoid this. We never care about partial results anyway
+    return (
+      <Component>
+        {(result) => <WrappedComponent {...props} {...result} data={result.loading ? undefined : result.data} />}
+      </Component>
+    )
+  };
+}
+
+// Simple wrapper which ignores loading and prints errors
+export function withQuerySinple<TInputProps = {}>(WrappedComponent: React.ComponentType<TInputProps & SimpleResult>): React.SFC<TInputProps> {
+  return (props) => {
+    return (
+      <Component>
+        {(result) => {
+          if (result.loading) {
+            return null;
+          }
+
+          if (result.error || !result.data) {
+            console.error(result.error)
+            return null;
+          }
+
+          return (
+            <WrappedComponent {...props} data={result.data} />
+          )
+        }}
+      </Component>
+    )
+  };
+}`);
+    } else {
+      this.printer.enqueue(`
+// Apollo's typing can also return void (in case of onCompleted/onError callbacks):
+// https://github.com/apollographql/react-apollo/issues/2095
+// We never use that functionality so fix here
+export declare type MutationFn = (options?: MutationOptions<Result, Variables>) => Promise<FetchResult<Result>>;
+
+import {
+  Mutation as __Mutation,
+  MutationProps as __MutationProps,
+  MutationOptions,
+  FetchResult,
+} from "react-apollo";
+
+type ComponentProps = Omit<Omit<__MutationProps<Result, Variables>, "mutation">, "children"> & {
+  children: (mutateFn: MutationFn) => React.ReactNode;
+}
+
+export const Component: React.SFC<ComponentProps> = (props) => {
+  const {
+    children,
+    ...otherProps
+  } = props
+
+  return (
+    <__Mutation<Result, Variables> mutation={Mutation} {...otherProps}>
+      {children as any}
+    </__Mutation>
+  )
+};
+
+export type Props = {
+  mutate: MutationFn,
+}
+
+export function withMutation<TInputProps = {}>(WrappedComponent: React.ComponentType<TInputProps & Props>): React.SFC<TInputProps> {
+  return (props) => {
+    return (
+      <Component>
+        {(mutate) => <WrappedComponent {...props} mutate={mutate} />}
+      </Component>
+    )
+  };
+}
+`);
     }
   }
 
@@ -189,7 +320,7 @@ export class TypescriptAPIGenerator extends TypescriptGenerator {
       fragmentName,
       selectionSet
     } = fragment;
-    this.scopeStackPush(fragmentName);
+    this.scopeStackPush("Fragment");
 
     this.printer.enqueue(stripIndent`
       // ====================================================
