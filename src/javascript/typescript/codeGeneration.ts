@@ -5,7 +5,6 @@ import {
   GraphQLInputObjectType,
 } from 'graphql';
 import * as path from 'path';
-import { ucFirst } from 'change-case'
 
 import {
   CompilerContext,
@@ -101,7 +100,7 @@ export function generateSource(
 
       const outputFilePath = path.join(
         path.dirname(fragment.filePath),
-        `${fragment.fragmentName}Fragment.ts`
+        `F_${fragment.fragmentName}.ts`
       );
 
       generatedFiles[outputFilePath] = new TypescriptGeneratedFile(output);
@@ -172,11 +171,6 @@ export class TypescriptAPIGenerator extends TypescriptGenerator {
     this.printer.enqueue(exportedTypeAlias);
     this.scopeStackPop();
 
-    const o = ucFirst(operationType)
-
-    this.printer.enqueue(`import ${o} from \"./${path.basename(filePath)}\";`)
-    this.printer.enqueue(`export { ${o} };`)
-
     // Generate the variables interface if the operation has any variables
     if (variables.length > 0) {
       const interfaceName = 'Variables';
@@ -204,14 +198,16 @@ export class TypescriptAPIGenerator extends TypescriptGenerator {
     // - http://astexplorer.net/
     // Can't make it work :-(
 
-    this.printer.enqueue(`
+    if (operationType === "query") {
+      this.printer.enqueue(`
+import Query from "./${path.basename(filePath)}";
+
+export { Query }
+
 import * as React from 'react'
 
 type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>
-`);
 
-    if (operationType === "query") {
-      this.printer.enqueue(`
 import {
   Query as __Query,
   QueryProps,
@@ -269,34 +265,17 @@ export function withQuerySinple<TInputProps = {}>(WrappedComponent: React.Compon
 }`);
     } else {
       this.printer.enqueue(`
-// Apollo's typing can also return void (in case of onCompleted/onError callbacks):
-// https://github.com/apollographql/react-apollo/issues/2095
-// We never use that functionality so fix here
-export declare type MutationFn = (options?: MutationOptions<Result, Variables>) => Promise<FetchResult<Result>>;
+import MutationX from "./${path.basename(filePath)}";
 
-import {
-  Mutation as __Mutation,
-  MutationProps as __MutationProps,
-  MutationOptions,
-  FetchResult,
-} from "react-apollo";
+import * as G__ from 'utils/ApolloTypeHelper'
 
-type ComponentProps = Omit<Omit<__MutationProps<Result, Variables>, "mutation">, "children"> & {
-  children: (mutateFn: MutationFn) => React.ReactNode;
-}
+export const Mutation = MutationX as G__.Mutation<Result, Variables>
 
-export const Component: React.SFC<ComponentProps> = (props) => {
-  const {
-    children,
-    ...otherProps
-  } = props
+import * as React from 'react'
 
-  return (
-    <__Mutation<Result, Variables> mutation={Mutation} {...otherProps}>
-      {children as any}
-    </__Mutation>
-  )
-};
+export type MutationFn = G__.MutationFn<Result, Variables>;
+export type ComponentProps = G__.MutationComponentProps<Result, Variables>;
+export const Component = G__.createMutationComponent<Result, Variables>(Mutation)
 
 export type Props = {
   mutate: MutationFn,
