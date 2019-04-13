@@ -64,7 +64,7 @@ export default class TypescriptGenerator {
   }
 
   public inputObjectDeclaration(inputObjectType: GraphQLInputObjectType) {
-    const { name, description } = inputObjectType;
+    const { name } = inputObjectType;
 
     const fieldMap = inputObjectType.getFields();
     const fields: ObjectProperty[] = Object.keys(inputObjectType.getFields())
@@ -79,11 +79,6 @@ export default class TypescriptGenerator {
     const inputType = this.interface(name, fields, {
       keyInheritsNullability: true
     });
-
-    inputType.leadingComments = [{
-      type: 'CommentLine',
-      value: ` ${description}`
-    } as t.CommentLine]
 
     return inputType;
   }
@@ -119,7 +114,6 @@ export default class TypescriptGenerator {
   }: {
     keyInheritsNullability?: boolean
   } = {}) {
-
     return t.TSInterfaceDeclaration(
       t.identifier(name),
       undefined,

@@ -25,6 +25,7 @@ const builtInScalarMap = {
   // - https://github.com/apollographql/apollo-client/issues/2626
   "Instant": t.TSNumberKeyword(),
   "CarPlatform": t.TSStringKeyword(),
+  "LD": t.TSStringKeyword(),
   "URI": t.TSStringKeyword(),
 }
 

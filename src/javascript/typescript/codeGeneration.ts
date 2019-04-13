@@ -136,7 +136,8 @@ export class TypescriptAPIGenerator extends TypescriptGenerator {
   }
 
   public typeAliasForInputObjectType(inputObjectType: GraphQLInputObjectType) {
-    this.printer.enqueue(this.inputObjectDeclaration(inputObjectType));
+    this.printer.enqueue(this.exportDeclaration(
+      this.inputObjectDeclaration(inputObjectType)));
   }
 
   public interfacesForOperation(operation: Operation) {
@@ -183,7 +184,7 @@ export class TypescriptAPIGenerator extends TypescriptGenerator {
       ));
       this.scopeStackPop();
     } else {
-      this.printer.enqueue(`interface Variables {}`)
+      this.printer.enqueue(`export interface Variables {}`)
     }
 
     // Check:
@@ -199,76 +200,68 @@ export class TypescriptAPIGenerator extends TypescriptGenerator {
     // Can't make it work :-(
 
     if (operationType === "query") {
-      this.printer.enqueue(`
-import Query from "./${path.basename(filePath)}";
+      let refetch
+      if (variables.length > 0) {
+        refetch = `
+export function refetch(variables: Variables): G__.PureQueryOptions<Result, Variables> {
+  return {
+    query: Query,
+    variables,
+  }
+}`
+      } else {
+        refetch = `
+export function refetch(): G__.PureQueryOptions<Result, Variables> {
+  return {
+    query: Query,
+  }
+}`
+      }
 
-export { Query }
+      this.printer.enqueue(`
+import * as G__ from 'utils/ApolloTypeHelper'
+
+import QueryX from "./${path.basename(filePath)}";
+export const Query = QueryX as G__.Query<Result, Variables>
 
 import * as React from 'react'
 
-type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>
+export const Component = G__.createQueryComponent<Result, Variables>(Query)
+export type ComponentProps = G__.QueryComponentProps<Result, Variables>
 
-import {
-  Query as __Query,
-  QueryProps,
-  QueryResult as __QueryResult,
-} from "react-apollo";
+export const CP = G__.createQueryComponentPassthrough<Result, Variables>(Query)
+export type ComponentPropsPassthrough = G__.QueryComponentPropsPassthrough<Result, Variables>
+export const CS = G__.createQueryComponentSimple<Result, Variables>(Query)
+export type ComponentPropsSimple = G__.QueryComponentPropsSimple<Result, Variables>
 
-type Props = Omit<QueryProps<Result, Variables>, "query">
+export type QueryResult = G__.QueryResult<Result, Variables>
+export type QueryResultSimple = G__.QueryResultSimple<Result, Variables>
 
-export const Component: React.SFC<Props> = (props) => {
-  return (
-    <__Query<Result, Variables> query={Query} {...props} />
-  )
-};
+export type PassthroughResult = G__.PassthroughResult<Result>
+export type SimpleResult = G__.SimpleResult<Result>
 
-export type QueryResult = __QueryResult<Result, Variables>
-export type SimpleResult = { data: Result }
-
-export function withQuery<TInputProps = {}>(WrappedComponent: React.ComponentType<TInputProps & QueryResult>): React.SFC<TInputProps> {
-  return (props) => {
-    // data can be {}. See:
-    // - https://github.com/apollographql/react-apollo/issues/1977
-    // - https://github.com/apollographql/react-apollo/issues/1686
-    //
-    // Avoid this. We never care about partial results anyway
-    return (
-      <Component>
-        {(result) => <WrappedComponent {...props} {...result} data={result.loading ? undefined : result.data} />}
-      </Component>
-    )
-  };
+export function withQueryPassthrough<TInputProps = {}>(
+  WrappedComponent: React.ComponentType<TInputProps & PassthroughResult>,
+  queryProps?: ComponentPropsPassthrough,
+): React.SFC<TInputProps> {
+  return G__.withQueryPassthrough<TInputProps, Result, Variables>(WrappedComponent, CP, queryProps)
 }
 
-// Simple wrapper which ignores loading and prints errors
-export function withQuerySinple<TInputProps = {}>(WrappedComponent: React.ComponentType<TInputProps & SimpleResult>): React.SFC<TInputProps> {
-  return (props) => {
-    return (
-      <Component>
-        {(result) => {
-          if (result.loading) {
-            return null;
-          }
+export function withQuerySinple<TInputProps = {}>(
+  WrappedComponent: React.ComponentType<TInputProps & SimpleResult>,
+  queryProps?: ComponentPropsSimple,
+): React.SFC<TInputProps> {
+  return G__.withQuerySinple<TInputProps, Result, Variables>(WrappedComponent, CS, queryProps)
+}
 
-          if (result.error || !result.data) {
-            console.error(result.error)
-            return null;
-          }
+// To be used with refetchQueries
+${refetch}`);
 
-          return (
-            <WrappedComponent {...props} data={result.data} />
-          )
-        }}
-      </Component>
-    )
-  };
-}`);
     } else {
       this.printer.enqueue(`
-import MutationX from "./${path.basename(filePath)}";
-
 import * as G__ from 'utils/ApolloTypeHelper'
 
+import MutationX from "./${path.basename(filePath)}";
 export const Mutation = MutationX as G__.Mutation<Result, Variables>
 
 import * as React from 'react'
