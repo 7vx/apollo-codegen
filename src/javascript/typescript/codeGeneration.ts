@@ -125,7 +125,7 @@ export class TypescriptAPIGenerator extends TypescriptGenerator {
   fileHeader() {
     this.printer.enqueue(
       stripIndent`
-        /* tslint:disable */
+        /* eslint-disable import/first */
         // This file was automatically generated and should not be edited.
       `
     );
@@ -148,7 +148,7 @@ export class TypescriptAPIGenerator extends TypescriptGenerator {
       selectionSet,
       filePath
     } = operation;
-
+console.log(filePath)
     this.scopeStackPush("Result");
     // this.scopeStackPush(operationName);
 
@@ -221,7 +221,8 @@ export function refetch(): G__.PureQueryOptions<Result, Variables> {
       this.printer.enqueue(`
 import * as G__ from 'utils/ApolloTypeHelper'
 
-import QueryX from "./${path.basename(filePath)}";
+import { loader } from 'graphql.macro';
+const QueryX = loader('./${path.basename(filePath)}');
 export const Query = QueryX as G__.Query<Result, Variables>
 
 import * as React from 'react'
@@ -239,6 +240,10 @@ export type QueryResultSimple = G__.QueryResultSimple<Result, Variables>
 
 export type PassthroughResult = G__.PassthroughResult<Result>
 export type SimpleResult = G__.SimpleResult<Result>
+
+export function useQuery(options?: G__.QueryHookOptions<Result, Variables>): G__.QueryResult<Result, Variables> {
+	return G__.useQuery1(Query, options)
+}
 
 export function withQueryPassthrough<TInputProps = {}>(
   WrappedComponent: React.ComponentType<TInputProps & PassthroughResult>,
@@ -260,28 +265,22 @@ ${refetch}`);
     } else {
       this.printer.enqueue(`
 import * as G__ from 'utils/ApolloTypeHelper'
+import { MutationFn, Mutation1Props, createMutationComponent, withMutation1, WrappedProps } from 'elements/apollo/Mutation1'
 
-import MutationX from "./${path.basename(filePath)}";
-export const Mutation = MutationX as G__.Mutation<Result, Variables>
+import { loader } from 'graphql.macro';
+const MutationX = loader('./${path.basename(filePath)}');
+export const Mutation = MutationX as G__.MutationNode<Result, Variables>
 
 import * as React from 'react'
+import { Omit } from 'utils/Omit';
 
-export type MutationFn = G__.MutationFn<Result, Variables>;
-export type ComponentProps = G__.MutationComponentProps<Result, Variables>;
-export const Component = G__.createMutationComponent<Result, Variables>(Mutation)
+export type MutationFn = MutationFn<Result, Variables>;
+export type ComponentProps = Omit<Mutation1Props<Result, Variables>, "mutation">
+export const Component = createMutationComponent<Result, Variables>(Mutation)
+export type Props = WrappedProps<Result, Variables>
 
-export type Props = {
-  mutate: MutationFn,
-}
-
-export function withMutation<TInputProps = {}>(WrappedComponent: React.ComponentType<TInputProps & Props>): React.SFC<TInputProps> {
-  return (props) => {
-    return (
-      <Component>
-        {(mutate) => <WrappedComponent {...props} mutate={mutate} />}
-      </Component>
-    )
-  };
+export function withMutation<TInputProps = {}>(WrappedComponent: React.ComponentType<TInputProps & Props>): React.FC<TInputProps> {
+  return withMutation1<Result, Variables, TInputProps>(Mutation, WrappedComponent)
 }
 `);
     }

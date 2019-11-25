@@ -24,9 +24,25 @@ const builtInScalarMap = {
   // - https://github.com/apollographql/apollo-client/issues/585
   // - https://github.com/apollographql/apollo-client/issues/2626
   "Instant": t.TSNumberKeyword(),
-  "CarPlatform": t.TSStringKeyword(),
+  "Duration": t.TSNumberKeyword(),
+  "CarPlatform": t.TSUnionType([
+    t.TSLiteralType(t.stringLiteral("turo")),
+    t.TSLiteralType(t.stringLiteral("getaround")),
+    t.TSLiteralType(t.stringLiteral("ryde")),
+    t.TSLiteralType(t.stringLiteral("hyrecar")),
+    t.TSLiteralType(t.stringLiteral("zubie")),
+    t.TSLiteralType(t.stringLiteral("bouncie")),
+    t.TSLiteralType(t.stringLiteral("automatic")),
+    t.TSLiteralType(t.stringLiteral("tesla")),
+  ]),
+  "LoginProvider": t.TSUnionType([
+    t.TSLiteralType(t.stringLiteral("facebook")),
+    t.TSLiteralType(t.stringLiteral("google")),
+  ]),
   "LD": t.TSStringKeyword(),
   "URI": t.TSStringKeyword(),
+  "Temporal": t.TSStringKeyword(),
+  "CarProfilePhoto": t.TSStringKeyword(),
 }
 
 export function createTypeFromGraphQLTypeFunction(

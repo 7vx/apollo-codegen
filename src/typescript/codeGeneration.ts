@@ -38,7 +38,7 @@ import {
 export function generateSource(context: LegacyCompilerContext) {
   const generator = new CodeGenerator<LegacyCompilerContext>(context);
 
-  generator.printOnNewline('/* tslint:disable */');
+  generator.printOnNewline('/* eslint-disable import/first */');
   generator.printOnNewline('//  This file was automatically generated and should not be edited.');
 
   context.typesUsed.forEach(type =>
