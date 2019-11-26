@@ -1,0 +1,17 @@
+diff --git a/node_modules/graphql/type/validate.js b/node_modules/graphql/type/validate.js
+index ba9e7f6..8d1111e 100644
+--- a/node_modules/graphql/type/validate.js
++++ b/node_modules/graphql/type/validate.js
+@@ -312,9 +312,9 @@ function validateTypes(context) {
+ function validateFields(context, type) {
+   var fields = (0, _objectValues.default)(type.getFields()); // Objects and Interfaces both must define one or more fields.
+ 
+-  if (fields.length === 0) {
+-    context.reportError("Type ".concat(type.name, " must define one or more fields."), getAllNodes(type));
+-  }
++  // if (fields.length === 0) {
++  //   context.reportError("Type ".concat(type.name, " must define one or more fields."), getAllNodes(type));
++  // }
+ 
+   var _iteratorNormalCompletion5 = true;
+   var _didIteratorError5 = false;
