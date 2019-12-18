@@ -265,22 +265,21 @@ ${refetch}`);
     } else {
       this.printer.enqueue(`
 import * as G__ from 'utils/ApolloTypeHelper'
-import { MutationFn, Mutation1Props, createMutationComponent, withMutation1, WrappedProps } from 'elements/apollo/Mutation1'
+import * as M__ from 'elements/apollo/Mutation1'
 
 import { loader } from 'graphql.macro';
 const MutationX = loader('./${path.basename(filePath)}');
 export const Mutation = MutationX as G__.MutationNode<Result, Variables>
 
 import * as React from 'react'
-import { Omit } from 'utils/Omit';
 
-export type MutationFn = MutationFn<Result, Variables>;
-export type ComponentProps = Omit<Mutation1Props<Result, Variables>, "mutation">
-export const Component = createMutationComponent<Result, Variables>(Mutation)
-export type Props = WrappedProps<Result, Variables>
+export type MutationFn = M__.MutationFn<Result, Variables>;
+export type ComponentProps = Omit<M__.Mutation1Props<Result, Variables>, "mutation">
+export const Component = M__.createMutationComponent<Result, Variables>(Mutation)
+export type Props = M__.WrappedProps<Result, Variables>
 
 export function withMutation<TInputProps = {}>(WrappedComponent: React.ComponentType<TInputProps & Props>): React.FC<TInputProps> {
-  return withMutation1<Result, Variables, TInputProps>(Mutation, WrappedComponent)
+  return M__.withMutation1<Result, Variables, TInputProps>(Mutation, WrappedComponent)
 }
 `);
     }
