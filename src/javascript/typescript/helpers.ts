@@ -36,6 +36,7 @@ const builtInScalarMap = {
     t.TSLiteralType(t.stringLiteral("tesla")),
     t.TSLiteralType(t.stringLiteral("viper")),
     t.TSLiteralType(t.stringLiteral("spireon_goldstar")),
+    t.TSLiteralType(t.stringLiteral("bmw"))
   ]),
   "LoginProvider": t.TSUnionType([
     t.TSLiteralType(t.stringLiteral("facebook")),
