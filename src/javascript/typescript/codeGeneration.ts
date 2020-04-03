@@ -265,21 +265,35 @@ ${refetch}`);
     } else {
       this.printer.enqueue(`
 import * as G__ from 'utils/ApolloTypeHelper'
-import * as M__ from 'elements/apollo/Mutation1'
+import * as M__ from 'elements/apollo/MutationCommon'
+import * as M0 from 'elements/apollo/Mutation0'
+import * as M1 from 'elements/apollo/Mutation1'
 
 import { loader } from 'graphql.macro';
 const MutationX = loader('./${path.basename(filePath)}');
 export const Mutation = MutationX as G__.MutationNode<Result, Variables>
 
+export type MutationFn = M__.MutationFn<Result, Variables>;
+
+// Hooks
+export function use0() {
+  return M0.useMutation0(Mutation)
+}
+
+export function use1() {
+  return M1.useMutation1(Mutation)
+}
+
 import * as React from 'react'
 
-export type MutationFn = M__.MutationFn<Result, Variables>;
-export type ComponentProps = Omit<M__.Mutation1Props<Result, Variables>, "mutation">
-export const Component = M__.createMutationComponent<Result, Variables>(Mutation)
-export type Props = M__.WrappedProps<Result, Variables>
+// Standard component
+export type ComponentProps = Omit<M__.MutationProps<Result, Variables>, "mutation">
+export const Component = M1.createMutationComponent<Result, Variables>(Mutation)
 
+// HOC
+export type Props = M__.WrappedProps<Result, Variables>
 export function withMutation<TInputProps = {}>(WrappedComponent: React.ComponentType<TInputProps & Props>): React.FC<TInputProps> {
-  return M__.withMutation1<Result, Variables, TInputProps>(Mutation, WrappedComponent)
+  return M1.withMutation1<Result, Variables, TInputProps>(Mutation, WrappedComponent)
 }
 `);
     }
