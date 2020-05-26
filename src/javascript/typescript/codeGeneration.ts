@@ -39,6 +39,12 @@ class TypescriptGeneratedFile implements BasicGeneratedFile {
 }
 
 function printEnumsAndInputObjects(generator: TypescriptAPIGenerator, context: CompilerContext) {
+  context;
+  generator.printer.enqueue(stripIndent`
+import * as g from 'graphql-types'
+`);
+
+/*
   generator.printer.enqueue(stripIndent`
     //==============================================================
     // START Enums and Input Objects
@@ -65,6 +71,7 @@ function printEnumsAndInputObjects(generator: TypescriptAPIGenerator, context: C
     // END Enums and Input Objects
     //==============================================================
   `)
+*/
 }
 
 export function generateSource(

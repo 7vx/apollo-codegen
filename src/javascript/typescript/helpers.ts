@@ -8,6 +8,8 @@ import {
   GraphQLScalarType,
   GraphQLString,
   GraphQLType,
+  GraphQLEnumType,
+  GraphQLInputObjectType,
 } from 'graphql'
 
 import * as t from '@babel/types';
@@ -66,6 +68,10 @@ export function createTypeFromGraphQLTypeFunction(
       } else {
         return t.TSTypeReference(t.identifier(graphQLType.name));
       }
+    } else if (graphQLType instanceof GraphQLEnumType) {
+      return t.TSTypeReference(t.identifier("g." + graphQLType.name));
+    } else if (graphQLType instanceof GraphQLInputObjectType) {
+      return t.TSTypeReference(t.identifier("g." + graphQLType.name));
     } else if (graphQLType instanceof GraphQLNonNull) {
       // This won't happen; but for TypeScript completeness:
       return typeFromGraphQLType(graphQLType.ofType, typeName);
