@@ -43,6 +43,7 @@ const builtInScalarMap = {
   "LoginProvider": t.TSUnionType([
     t.TSLiteralType(t.stringLiteral("facebook")),
     t.TSLiteralType(t.stringLiteral("google")),
+    t.TSLiteralType(t.stringLiteral("apple")),
   ]),
   "LD": t.TSStringKeyword(),
   "URI": t.TSStringKeyword(),
