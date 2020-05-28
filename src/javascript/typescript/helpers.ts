@@ -48,6 +48,7 @@ const builtInScalarMap = {
   "LD": t.TSStringKeyword(),
   "URI": t.TSStringKeyword(),
   "Temporal": t.TSStringKeyword(),
+  "ZoneId": t.TSStringKeyword(),
   "CarProfilePhoto": t.TSStringKeyword(),
 }
 
