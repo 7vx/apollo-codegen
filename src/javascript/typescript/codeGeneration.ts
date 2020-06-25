@@ -44,34 +44,34 @@ function printEnumsAndInputObjects(generator: TypescriptAPIGenerator, context: C
 import * as g from 'graphql-types'
 `);
 
-/*
-  generator.printer.enqueue(stripIndent`
-    //==============================================================
-    // START Enums and Input Objects
-    // All enums and input objects are included in every output file
-    // for now, but this will be changed soon.
-    // TODO: Link to issue to fix this.
-    //==============================================================
-  `);
+  /*
+    generator.printer.enqueue(stripIndent`
+      //==============================================================
+      // START Enums and Input Objects
+      // All enums and input objects are included in every output file
+      // for now, but this will be changed soon.
+      // TODO: Link to issue to fix this.
+      //==============================================================
+    `);
 
-  context.typesUsed
-    .filter(type => (type instanceof GraphQLEnumType))
-    .forEach((enumType) => {
-      generator.typeAliasForEnumType(enumType as GraphQLEnumType);
-    });
+    context.typesUsed
+      .filter(type => (type instanceof GraphQLEnumType))
+      .forEach((enumType) => {
+        generator.typeAliasForEnumType(enumType as GraphQLEnumType);
+      });
 
-  context.typesUsed
-    .filter(type => type instanceof GraphQLInputObjectType)
-    .forEach((inputObjectType) => {
-      generator.typeAliasForInputObjectType(inputObjectType as GraphQLInputObjectType);
-    });
+    context.typesUsed
+      .filter(type => type instanceof GraphQLInputObjectType)
+      .forEach((inputObjectType) => {
+        generator.typeAliasForInputObjectType(inputObjectType as GraphQLInputObjectType);
+      });
 
-  generator.printer.enqueue(stripIndent`
-    //==============================================================
-    // END Enums and Input Objects
-    //==============================================================
-  `)
-*/
+    generator.printer.enqueue(stripIndent`
+      //==============================================================
+      // END Enums and Input Objects
+      //==============================================================
+    `)
+  */
 }
 
 export function generateSource(
@@ -155,7 +155,7 @@ export class TypescriptAPIGenerator extends TypescriptGenerator {
       selectionSet,
       filePath
     } = operation;
-console.log(filePath)
+    console.log(filePath)
     this.scopeStackPush("Result");
     // this.scopeStackPush(operationName);
 
@@ -227,6 +227,7 @@ export function refetch(): G__.PureQueryOptions<Result, Variables> {
 
       this.printer.enqueue(`
 import * as G__ from 'utils/ApolloTypeHelper'
+import * as Q1 from 'utils/apollo/useQuery1'
 
 import { loader } from 'graphql.macro';
 const QueryX = loader('./${path.basename(filePath)}');
@@ -248,8 +249,12 @@ export type QueryResultSimple = G__.QueryResultSimple<Result, Variables>
 export type PassthroughResult = G__.PassthroughResult<Result>
 export type SimpleResult = G__.SimpleResult<Result>
 
-export function useQuery(options?: G__.QueryHookOptions<Result, Variables>): G__.QueryResult<Result, Variables> {
-	return G__.useQuery1(Query, options)
+export function use0(options?: G__.QueryHookOptions<Result, Variables>): G__.QueryResult<Result, Variables> {
+	return G__.useQuery0(Query, options)
+}
+
+export function use1(options?: G__.QueryHookOptions<Result, Variables>): G__.QueryResult<Result, Variables> {
+	return Q1.useQuery1(Query, options)
 }
 
 export function withQueryPassthrough<TInputProps = {}>(
@@ -272,9 +277,9 @@ ${refetch}`);
     } else {
       this.printer.enqueue(`
 import * as G__ from 'utils/ApolloTypeHelper'
-import * as M__ from 'elements/apollo/MutationCommon'
-import * as M0 from 'elements/apollo/Mutation0'
-import * as M1 from 'elements/apollo/Mutation1'
+import * as M__ from 'utils/apollo/MutationCommon'
+import * as M0 from 'utils/apollo/Mutation0'
+import * as M1 from 'utils/apollo/Mutation1'
 
 import { loader } from 'graphql.macro';
 const MutationX = loader('./${path.basename(filePath)}');
