@@ -40,7 +40,8 @@ const builtInScalarMap = {
     t.TSLiteralType(t.stringLiteral("spireon_goldstar")),
     t.TSLiteralType(t.stringLiteral("bmw")),
     t.TSLiteralType(t.stringLiteral("ezpass_nj")),
-    t.TSLiteralType(t.stringLiteral("ezpass_ny"))
+    t.TSLiteralType(t.stringLiteral("ezpass_ny")),
+    t.TSLiteralType(t.stringLiteral("tollroads"))
   ]),
   "LoginProvider": t.TSUnionType([
     t.TSLiteralType(t.stringLiteral("facebook")),
